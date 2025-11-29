@@ -20,7 +20,7 @@ def format_rupiah(angka):
         return str(angka)
 
 def get_random_salam():
-    salam = ["Assalamualaikum Kak", "Halo Kak", "Selamat Pagi Kak", "Siang Kak", "Hai Kak"]
+    salam = ["Assalamu'alaikum #PejuangAmal", "Assalamu'alaikum #SahabatBeramal", "Assalamualaikum #SahabatBeramal", "Assalamualaikum #PejuangAmal"]
     return random.choice(salam)
 
 # --- 2. UI ---
@@ -41,13 +41,6 @@ if uploaded_file is not None:
             df = pd.read_csv(uploaded_file)
         else:
             df = pd.read_excel(uploaded_file)
-            
-        # MAPPING KOLOM
-        with st.expander("⚙️ Pengaturan Kolom (Klik disini)", expanded=False):
-            cols = df.columns.tolist()
-            c_nama = st.selectbox("Kolom NAMA", cols, index=0)
-            c_nomor = st.selectbox("Kolom NO HP", cols, index=min(1, len(cols)-1))
-            c_nominal = st.selectbox("Kolom NOMINAL", cols, index=min(2, len(cols)-1))
         
         # FITUR BARU: PAGINATION / BATASI BARIS
         total_data = len(df)
@@ -72,14 +65,13 @@ if uploaded_file is not None:
         
         col_msg1, col_msg2 = st.columns([2, 1])
         with col_msg1:
-            default_msg = """Terima kasih atas donasinya sebesar *[nominal]* untuk program kami.
-Semoga berkah untuk *[nama]* sekeluarga."""
-            template_pesan = st.text_area("Isi Pesan (Gunakan * untuk bold):", value=default_msg, height=150)
+            default_msg = """Tulis isi pesan laporan disini ya kak CS yang sabaar dan suka membantu Program"""
+            template_pesan = st.text_area("Isi Pesan (Gunakan * untuk bold):", value=default_msg, height=350)
         
         with col_msg2:
             st.write("Options:")
             pakai_salam = st.checkbox("✅ Auto Salam + Nama", value=True)
-            st.caption("*Aman dari blokir karena pesan unik.*")
+            st.caption("*Lebih aman dari blokir karena pesan unik.*")
 
         st.markdown("---")
         
@@ -125,3 +117,4 @@ Semoga berkah untuk *[nama]* sekeluarga."""
         st.error(f"Terjadi kesalahan: {e}")
 else:
     st.info("Silakan upload file di menu sebelah kiri (Sidebar).")
+
