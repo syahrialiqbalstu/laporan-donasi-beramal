@@ -83,9 +83,18 @@ if uploaded_file is not None:
         st.markdown("---")
         
         # LIST DATA
-        st.subheader("4. Eksekusi")
+                # ... (Kode di atas ini biarkan saja) ...
+        
+        # --- GANTI DARI SINI ---
+        
+        # Styling agar tampilan lebih renggang dan rapi
+        st.markdown("""
+        <style>
+            div[data-testid="column"] { align-self: center; } 
+            hr { margin: 0.5rem 0 1rem 0; }
+        </style>
+        """, unsafe_allow_html=True)
 
-        # Gunakan container agar rapi
         for index, row in df_sliced.iterrows():
             nama = str(row[c_nama])
             nomor_raw = row[c_nomor]
@@ -107,22 +116,48 @@ if uploaded_file is not None:
 
             link_wa = f"https://wa.me/{nomor_bersih}?text={urllib.parse.quote(pesan_final)}"
             
-            # TAMPILAN PER BARIS (Lebih Padat)
+            # --- TAMPILAN UI BARU ---
+            
+            # Buat container agar setiap baris ada kotaknya sedikit
             with st.container():
-                c1, c2, c3 = st.columns([0.5, 3, 1])
-                with c1:
-                    # Checkbox visual saja (Streamlit akan refresh jika diklik, tapi membantu mata)
-                    st.checkbox("", key=f"chk_{index}") 
-                with c2:
-                    st.markdown(f"**{nama}** | {nominal_rp}")
-                    st.caption(f"No: {nomor_bersih}")
-                with c3:
-                    st.link_button("Kirim WA ➡", link_wa, type="primary")
+                # Bagi layout menjadi 4 kolom:
+                # Kolom 1 (Kecil): Nomor Urut
+                # Kolom 2 (Kecil): Checkbox
+                # Kolom 3 (Besar): Nama & Info
+                # Kolom 4 (Sedang): Tombol Kirim
+                c_num, c_check, c_info, c_btn = st.columns([0.3, 0.3, 4, 1.2])
+                
+                # 1. Penomoran (Index Excel + 1)
+                with c_num:
+                    st.write(f"**#{index+1}**")
+                
+                # 2. Checkbox Status
+                with c_check:
+                    # Key unik berdasarkan index agar status tersimpan
+                    is_done = st.checkbox("", key=f"status_{index}")
+                
+                # 3. Info Donatur (Logika Coret Teks)
+                with c_info:
+                    if is_done:
+                        # Jika dicentang: Teks abu-abu & dicoret
+                        st.markdown(f"<h3 style='color: #b2bec3; margin:0; text-decoration: line-through;'>{nama}</h3>", unsafe_allow_html=True)
+                        st.caption(f"~~{nominal_rp}~~ | ~~{nomor_bersih}~~ (Terkirim ✅)")
+                    else:
+                        # Jika belum: Teks hitam tebal
+                        st.markdown(f"<h3 style='margin:0;'>{nama}</h3>", unsafe_allow_html=True)
+                        st.caption(f"💰 **{nominal_rp}** | 📱 {nomor_bersih}")
+
+                # 4. Tombol Kirim
+                with c_btn:
+                    # Jika sudah selesai, tombol jadi disabled (abu-abu) agar tidak salah kirim
+                    st.link_button("Kirim WA 🚀", link_wa, type="primary", disabled=is_done)
+                
                 st.divider()
 
     except Exception as e:
         st.error(f"Terjadi kesalahan: {e}")
 else:
     st.info("Silakan upload file di menu sebelah kiri (Sidebar).")
+
 
 
