@@ -50,33 +50,67 @@ if uploaded_file is not None:
             c_nominal = st.selectbox("Kolom NOMINAL", cols, index=min(2, len(cols)-1))
         
         # FITUR BARU: PAGINATION (INPUT ANGKA)
-        total_data = len(df)
         st.sidebar.markdown("---")
         st.sidebar.header("2. Pembagian Tugas")
+       total_data = len(df)
         
-        # Buat 2 kolom di sidebar agar inputnya sejajar
-        col_awal, col_akhir = st.sidebar.columns(2)
+        # --- 1. INISIALISASI MEMORI (Agar Slider & Angka Sinkron) ---
+        if 'start_idx' not in st.session_state:
+            st.session_state['start_idx'] = 0
+        if 'end_idx' not in st.session_state:
+            st.session_state['end_idx'] = min(50, total_data)
+
+        # --- 2. FUNGSI UPDATE (Callback) ---
+        def update_from_slider():
+            # Saat slider digeser, update angka input
+            st.session_state.start_idx = st.session_state.slider_key[0]
+            st.session_state.end_idx = st.session_state.slider_key[1]
+
+        def update_from_input():
+            # Saat angka diketik, update slider
+            # Konversi: Input Manusia (mulai 1) -> Python (mulai 0)
+            st.session_state.start_idx = st.session_state.num_start - 1
+            st.session_state.end_idx = st.session_state.num_end
+
+        # --- 3. TAMPILAN INPUT ANGKA ---
+        c_awal, c_akhir = st.sidebar.columns(2)
         
-        with col_awal:
-            # Input Mulai (Manusia menghitung dari 1, bukan 0)
-            val_mulai = st.number_input("Dari Baris", min_value=1, max_value=total_data, value=1)
+        with c_awal:
+            # Input Start (Value diambil dari memori)
+            st.number_input(
+                "Dari", 
+                min_value=1, max_value=total_data, 
+                value=st.session_state.start_idx + 1, 
+                key="num_start", on_change=update_from_input
+            )
             
-        with col_akhir:
-            # Input Sampai (Default 50, atau max data jika < 50)
-            def_akhir = 50 if total_data > 50 else total_data
-            val_sampai = st.number_input("Sampai Baris", min_value=1, max_value=total_data, value=def_akhir)
+        with c_akhir:
+            # Input End
+            st.number_input(
+                "Sampai", 
+                min_value=1, max_value=total_data, 
+                value=st.session_state.end_idx, 
+                key="num_end", on_change=update_from_input
+            )
+
+        # --- 4. TAMPILAN SLIDER ---
+        # Slider mengambil value dari session_state agar posisinya ikut berubah saat diketik
+        slider_range = st.sidebar.slider(
+            "Geser Range Cepat:",
+            0, total_data,
+            (st.session_state.start_idx, st.session_state.end_idx),
+            key="slider_key", on_change=update_from_slider
+        )
         
-        # Konversi ke Index Python (Python mulai dari 0)
-        start_idx = val_mulai - 1 
-        end_idx = val_sampai
+        # Tetapkan variable untuk pemotongan data
+        start_idx = st.session_state.start_idx
+        end_idx = st.session_state.end_idx
         
-        # Validasi kecil agar Start tidak lebih besar dari End
-        if start_idx >= end_idx:
-            st.sidebar.error("Angka 'Dari' harus lebih kecil dari 'Sampai'!")
-            df_sliced = df.iloc[0:0] # Kosongkan list
-        else:
-            df_sliced = df.iloc[start_idx:end_idx]
-            st.success(f"Menampilkan data urutan {val_mulai} - {val_sampai}")
+        df_sliced = df.iloc[start_idx:end_idx]
+        
+        # Info teks kecil
+        st.sidebar.caption(f"Menampilkan {end_idx - start_idx} data.")
+
 
         # INPUT PESAN
         st.markdown("---")
@@ -170,6 +204,7 @@ if uploaded_file is not None:
         st.error(f"Terjadi kesalahan: {e}")
 else:
     st.info("Silakan upload file di menu sebelah kiri (Sidebar).")
+
 
 
 
