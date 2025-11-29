@@ -25,7 +25,7 @@ def get_random_salam():
 
 # --- 2. UI ---
 st.set_page_config(page_title="Donasi Reporter Pro", page_icon="🚀", layout="wide")
-st.title("🚀 Laporan Donasi WA - Tim CS")
+st.title("🚀 Laporan Donasi - CS Beramal")
 
 # SIDEBAR: UPLOAD & SETTING
 with st.sidebar:
@@ -158,6 +158,7 @@ if uploaded_file is not None:
         st.error(f"Terjadi kesalahan: {e}")
 else:
     st.info("Silakan upload file di menu sebelah kiri (Sidebar).")
+
 
 
 
