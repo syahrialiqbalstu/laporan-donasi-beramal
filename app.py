@@ -26,10 +26,10 @@ def format_rupiah(angka):
 def get_random_salam():
     """Acak salam biar aman dari blokir WA"""
     salam = [
-        "Assalamu'alaikum #PejuangAmal", 
-        "Assalamu'alaikum #SahabatBeramal", 
-        "Assalamualaikum #SahabatBeramal", 
-        "Assalamualaikum #PejuangAmal", 
+        "Assalamu'alaikum #PejuangAmal {nama}", 
+        "Assalamu'alaikum #SahabatBeramal {nama}", 
+        "Assalamualaikum #SahabatBeramal {nama}", 
+        "Assalamualaikum #PejuangAmal {nama}", 
     ]
     return random.choice(salam)
 
