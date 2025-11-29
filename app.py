@@ -3,13 +3,11 @@ import pandas as pd
 import urllib.parse
 import random
 
-# --- 1. FUNGSI UTAMA ---
-
+# --- 1. FUNGSI ---
 def bersihkan_nomor(nomor):
     n = str(nomor)
     if n.endswith('.0'): n = n[:-2]
     n = ''.join(filter(str.isdigit, n))
-    
     if n.startswith('0'): return '62' + n[1:]
     elif n.startswith('62'): return n
     elif n == "": return "" 
@@ -22,22 +20,20 @@ def format_rupiah(angka):
         return str(angka)
 
 def get_random_salam():
-    """Acak salam biar aman dari blokir WA"""
-    salam = [
-        "Assalamu'alaikum #PejuangAmal", 
-        "Assalamu'alaikum #SahabatBeramal", 
-        "Assalamualaikum #SahabatBeramal", 
-        "Assalamualaikum #PejuangAmal", 
-    ]
+    salam = ["Assalamualaikum Kak", "Halo Kak", "Selamat Pagi Kak", "Siang Kak", "Hai Kak"]
     return random.choice(salam)
 
-# --- 2. TAMPILAN UI ---
+# --- 2. UI ---
+st.set_page_config(page_title="Donasi Reporter Pro", page_icon="🚀", layout="wide")
+st.title("🚀 Laporan Donasi WA - Tim CS")
 
-st.set_page_config(page_title="Donasi Reporter", page_icon="📝")
-st.title("📝 Laporan Donasi Custom")
-
-# A. UPLOAD FILE
-uploaded_file = st.file_uploader("1. Upload Excel/CSV Data Donatur", type=['xlsx', 'csv'])
+# SIDEBAR: UPLOAD & SETTING
+with st.sidebar:
+    st.header("1. Upload Data")
+    uploaded_file = st.file_uploader("File Excel/CSV", type=['xlsx', 'csv'])
+    
+    st.markdown("---")
+    st.info("💡 **Tips Format WA:**\n\n- Gunakan bintang `*teks*` untuk **Tebal**\n- Gunakan `_teks_` untuk *Miring*")
 
 if uploaded_file is not None:
     try:
@@ -46,33 +42,52 @@ if uploaded_file is not None:
         else:
             df = pd.read_excel(uploaded_file)
             
-        st.success(f"Data dimuat: {len(df)} donatur.")
-        
-        with st.expander("⚙️ Pengaturan Kolom Excel (Klik jika kolom tidak terbaca)", expanded=False):
+        # MAPPING KOLOM
+        with st.expander("⚙️ Pengaturan Kolom (Klik disini)", expanded=False):
             cols = df.columns.tolist()
             c_nama = st.selectbox("Kolom NAMA", cols, index=0)
             c_nomor = st.selectbox("Kolom NO HP", cols, index=min(1, len(cols)-1))
             c_nominal = st.selectbox("Kolom NOMINAL", cols, index=min(2, len(cols)-1))
         
-        st.divider()
+        # FITUR BARU: PAGINATION / BATASI BARIS
+        total_data = len(df)
+        st.sidebar.markdown("---")
+        st.sidebar.header("2. Pembagian Tugas")
+        
+        # Slider untuk memilih range baris
+        range_data = st.sidebar.slider(
+            "Tampilkan baris ke berapa?",
+            0, total_data, (0, min(50, total_data)) # Default 0 - 50
+        )
+        start_idx, end_idx = range_data
+        
+        # Filter DataFrame berdasarkan slider
+        df_sliced = df.iloc[start_idx:end_idx]
+        
+        st.success(f"Menampilkan data ke-{start_idx+1} sampai {end_idx} (Dari total {total_data} data)")
 
-        # C. CUSTOM PESAN
-        st.subheader("2. Tulis Isi Pesan")
+        # INPUT PESAN
+        st.markdown("---")
+        st.subheader("3. Tulis Pesan")
         
-        # Template default saya ubah agar tidak ada salam di awal, karena salam nanti otomatis
-        default_msg = """Tulis isi pesan laporan disini ya kak CS yang sabaar dan tidak suka marah marahh"""
+        col_msg1, col_msg2 = st.columns([2, 1])
+        with col_msg1:
+            default_msg = """Terima kasih atas donasinya sebesar *[nominal]* untuk program kami.
+Semoga berkah untuk *[nama]* sekeluarga."""
+            template_pesan = st.text_area("Isi Pesan (Gunakan * untuk bold):", value=default_msg, height=150)
+        
+        with col_msg2:
+            st.write("Options:")
+            pakai_salam = st.checkbox("✅ Auto Salam + Nama", value=True)
+            st.caption("*Aman dari blokir karena pesan unik.*")
 
-        template_pesan = st.text_area("Isi Pesan (Tanpa Salam Pembuka):", value=default_msg, height=250)
+        st.markdown("---")
         
-        # Opsi Anti-Banned
-        pakai_salam = st.checkbox("✅ Gunakan 'Salam + Nama' otomatis di awal pesan (Recommended)", value=True)
-        
-        st.divider()
-        
-        # D. LIST DONATUR
-        st.subheader("3. Antrian Kirim WA")
+        # LIST DATA
+        st.subheader("4. Eksekusi")
 
-        for index, row in df.iterrows():
+        # Gunakan container agar rapi
+        for index, row in df_sliced.iterrows():
             nama = str(row[c_nama])
             nomor_raw = row[c_nomor]
             nominal_raw = row[c_nominal]
@@ -82,35 +97,31 @@ if uploaded_file is not None:
             nomor_bersih = bersihkan_nomor(nomor_raw)
             nominal_rp = format_rupiah(nominal_raw)
             
-            # --- LOGIKA PENYUSUNAN PESAN BARU ---
-            
-            # 1. Siapkan Body Pesan (Ganti [nominal] dan [nama] jika user masih pakai di body)
+            # RAKIT PESAN
             body_pesan = template_pesan.replace("[nama]", nama).replace("[nominal]", nominal_rp)
             
-            # 2. Gabungkan Salam + Nama + Body
             if pakai_salam:
                 salam = get_random_salam()
-                # Format: Salam (spasi) Nama (koma) (enter 2x) Body
                 pesan_final = f"{salam} {nama},\n\n{body_pesan}"
             else:
                 pesan_final = body_pesan
 
-            # Buat Link
             link_wa = f"https://wa.me/{nomor_bersih}?text={urllib.parse.quote(pesan_final)}"
             
-            # Render Card
-            col1, col2 = st.columns([3, 1])
-            with col1:
-                st.markdown(f"**{nama}** | {nominal_rp}")
-                with st.expander("🔍 Preview Pesan"):
-                    st.text(pesan_final)
-            with col2:
-                st.link_button("🚀 Kirim WA", link_wa, type="primary")
-            st.write("---")
+            # TAMPILAN PER BARIS (Lebih Padat)
+            with st.container():
+                c1, c2, c3 = st.columns([0.5, 3, 1])
+                with c1:
+                    # Checkbox visual saja (Streamlit akan refresh jika diklik, tapi membantu mata)
+                    st.checkbox("", key=f"chk_{index}") 
+                with c2:
+                    st.markdown(f"**{nama}** | {nominal_rp}")
+                    st.caption(f"No: {nomor_bersih}")
+                with c3:
+                    st.link_button("Kirim WA ➡", link_wa, type="primary")
+                st.divider()
 
     except Exception as e:
         st.error(f"Terjadi kesalahan: {e}")
-
 else:
-    st.info("Silakan upload file Excel data donatur.")
-
+    st.info("Silakan upload file di menu sebelah kiri (Sidebar).")
