@@ -225,20 +225,23 @@ if uploaded_file is not None:
                         </div>
                         """,
                         unsafe_allow_html=True
-                    )
 
-                    # Tombol kirim – akan disable jika sudah dicentang
+                         # Tombol kirim – akan disable jika sudah dicentang
                     st.link_button(
                         "Kirim WA 🚀",
                         link_wa,
                         type="primary",
                         disabled=is_done
                     )
+                    )
+
+                   
 
     except Exception as e:
         st.error(f"Terjadi kesalahan: {e}")
 else:
     st.info("Silakan upload file di menu sebelah kiri (Sidebar).")
+
 
 
 
