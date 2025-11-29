@@ -210,7 +210,13 @@ if uploaded_file is not None:
                         f"#{global_idx + 1}",
                         key=f"status_{global_idx}"
                     )
-
+                    # Tombol kirim – akan disable jika sudah dicentang
+                    st.link_button(
+                        "Kirim WA 🚀",
+                        link_wa,
+                        type="primary",
+                        disabled=is_done
+                    )
                     name_class = "donor-name done" if is_done else "donor-name"
 
                     # Kartu donatur
@@ -224,15 +230,7 @@ if uploaded_file is not None:
                             </div>
                         </div>
                         """,
-                        unsafe_allow_html=True,
-
-                         # Tombol kirim – akan disable jika sudah dicentang
-                    st.link_button(
-                        "Kirim WA 🚀",
-                        link_wa,
-                        type="primary",
-                        disabled=is_done
-                    )
+                        unsafe_allow_html=True
                     )
 
                    
@@ -241,6 +239,7 @@ if uploaded_file is not None:
         st.error(f"Terjadi kesalahan: {e}")
 else:
     st.info("Silakan upload file di menu sebelah kiri (Sidebar).")
+
 
 
 
