@@ -50,7 +50,6 @@ if uploaded_file is not None:
             c_nominal = st.selectbox("Kolom NOMINAL", cols, index=min(2, len(cols)-1))
         
         # FITUR BARU: PAGINATION (INPUT ANGKA)
-        st.sidebar.markdown("---")
         st.sidebar.header("2. Pembagian Tugas")
         
         total_data = len(df)
@@ -206,6 +205,7 @@ if uploaded_file is not None:
         st.error(f"Terjadi kesalahan: {e}")
 else:
     st.info("Silakan upload file di menu sebelah kiri (Sidebar).")
+
 
 
 
