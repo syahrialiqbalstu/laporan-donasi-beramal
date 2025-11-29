@@ -129,50 +129,49 @@ if uploaded_file is not None:
 
         st.markdown("---")
         
-        # LIST DATA
-                # ... (Kode di atas ini biarkan saja) ...
-        
-        # --- GANTI DARI SINI ---
-        
-        # Styling agar tampilan lebih renggang dan rapi
+                # Styling aksi kirim
         st.markdown("""
         <style>
-        /* Perbesar semua checkbox */
+        /* Perbesar checkbox */
         input[type="checkbox"] {
-            transform: scale(1.6);
-            margin-right: 0.35rem;
+            transform: scale(1.5);
+            transform-origin: center;
+            margin-right: 4px;
         }
-        /* Kartu donatur dalam grid 3 kolom */
-        .donor-card {
-            padding: 0.75rem 0.9rem;
-            border-radius: 0.75rem;
-            border: 1px solid #e5e7eb;
-            background-color: #ffffff;
-            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
-            margin-bottom: 0.5rem;
+        .donor-index {
+            font-size: 0.78rem;
+            color: #6b7280;
         }
-        .donor-name {
+        .donor-name-normal {
             font-weight: 600;
-            font-size: 0.95rem;
-            margin-bottom: 0.2rem;
+            font-size: 0.9rem;
+            color: #111827;
         }
-        .donor-name.done {
+        .donor-name-done {
+            font-weight: 600;
+            font-size: 0.9rem;
             color: #9ca3af;
             text-decoration: line-through;
         }
-        .donor-meta {
+        .donor-meta-normal {
             font-size: 0.8rem;
             color: #6b7280;
+        }
+        .donor-meta-done {
+            font-size: 0.8rem;
+            color: #9ca3af;
+            text-decoration: line-through;
         }
         </style>
         """, unsafe_allow_html=True)
 
 
                 # Tampilkan data dalam grid 3 kolom (hanya di desktop akan terasa, di HP tetap vertikal)
-        total_slice = len(df_sliced)
+                total_slice = len(df_sliced)
 
+        # Tampilkan 3 item per baris (desktop), otomatis jadi 1 kolom di HP
         for block_start in range(0, total_slice, 3):
-            cols = st.columns(3, gap="large")  # 3 kartu per baris
+            row_cols = st.columns(3, gap="large")
 
             for col_idx in range(3):
                 data_idx = block_start + col_idx
@@ -200,45 +199,53 @@ if uploaded_file is not None:
                     pesan_final = body_pesan
 
                 link_wa = f"https://wa.me/{nomor_bersih}?text={urllib.parse.quote(pesan_final)}"
+                global_idx = start_idx + data_idx  # mengikuti pagination
 
-                # Nomor urut global (ikut pagination)
-                global_idx = start_idx + data_idx  # start_idx sudah dibuat di bagian pagination
+                with row_cols[col_idx]:
+                    # Satu kartu kecil untuk 1 donatur
+                    with st.container():
+                        top1, top2, top3 = st.columns([0.9, 3, 1.8])
 
-                with cols[col_idx]:
-                    # Checkbox besar + nomor urut
-                    is_done = st.checkbox(
-                        f"#{global_idx + 1}",
-                        key=f"status_{global_idx}"
-                    )
-                    # Tombol kirim – akan disable jika sudah dicentang
-                    st.link_button(
-                        "Kirim WA 🚀",
-                        link_wa,
-                        type="primary",
-                        disabled=is_done
-                    )
-                    name_class = "donor-name done" if is_done else "donor-name"
+                        # Kolom 1: checkbox + nomor urut
+                        with top1:
+                            is_done = st.checkbox(
+                                "",
+                                key=f"status_{global_idx}"
+                            )
+                            st.markdown(
+                                f"<span class='donor-index'>#{global_idx+1}</span>",
+                                unsafe_allow_html=True
+                            )
 
-                    # Kartu donatur
-                    st.markdown(
-                        f"""
-                        <div class="donor-card">
-                            <div class="{name_class}">{nama}</div>
-                            <div class="donor-meta">
-                                💰 {nominal_rp}<br>
-                                📱 {nomor_bersih}
-                            </div>
-                        </div>
-                        """,
-                        unsafe_allow_html=True
-                    )
+                        # Tentukan kelas CSS berdasarkan status centang
+                        name_class = "donor-name-done" if is_done else "donor-name-normal"
+                        meta_class = "donor-meta-done" if is_done else "donor-meta-normal"
 
-                   
+                        # Kolom 2: nama + meta (nominal & nomor)
+                        with top2:
+                            st.markdown(
+                                f"<div class='{name_class}'>{nama}</div>",
+                                unsafe_allow_html=True
+                            )
+                            st.markdown(
+                                f"<div class='{meta_class}'>💰 {nominal_rp}<br>📱 {nomor_bersih}</div>",
+                                unsafe_allow_html=True
+                            )
 
+                        # Kolom 3: tombol kirim
+                        with top3:
+                            st.link_button(
+                                "Kirim WA 🚀",
+                                link_wa,
+                                type="primary",
+                                disabled=is_done   # non-aktif jika sudah dicentang
+                            )
+                            
     except Exception as e:
         st.error(f"Terjadi kesalahan: {e}")
 else:
     st.info("Silakan upload file di menu sebelah kiri (Sidebar).")
+
 
 
 
