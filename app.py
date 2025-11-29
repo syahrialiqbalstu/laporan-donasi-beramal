@@ -49,22 +49,34 @@ if uploaded_file is not None:
             c_nomor = st.selectbox("Kolom NO HP", cols, index=min(1, len(cols)-1))
             c_nominal = st.selectbox("Kolom NOMINAL", cols, index=min(2, len(cols)-1))
         
-        # FITUR BARU: PAGINATION / BATASI BARIS
+        # FITUR BARU: PAGINATION (INPUT ANGKA)
         total_data = len(df)
         st.sidebar.markdown("---")
         st.sidebar.header("2. Pembagian Tugas")
         
-        # Slider untuk memilih range baris
-        range_data = st.sidebar.slider(
-            "Tampilkan baris ke berapa?",
-            0, total_data, (0, min(50, total_data)) # Default 0 - 50
-        )
-        start_idx, end_idx = range_data
+        # Buat 2 kolom di sidebar agar inputnya sejajar
+        col_awal, col_akhir = st.sidebar.columns(2)
         
-        # Filter DataFrame berdasarkan slider
-        df_sliced = df.iloc[start_idx:end_idx]
+        with col_awal:
+            # Input Mulai (Manusia menghitung dari 1, bukan 0)
+            val_mulai = st.number_input("Dari Baris", min_value=1, max_value=total_data, value=1)
+            
+        with col_akhir:
+            # Input Sampai (Default 50, atau max data jika < 50)
+            def_akhir = 50 if total_data > 50 else total_data
+            val_sampai = st.number_input("Sampai Baris", min_value=1, max_value=total_data, value=def_akhir)
         
-        st.success(f"Menampilkan data ke-{start_idx+1} sampai {end_idx} (Dari total {total_data} data)")
+        # Konversi ke Index Python (Python mulai dari 0)
+        start_idx = val_mulai - 1 
+        end_idx = val_sampai
+        
+        # Validasi kecil agar Start tidak lebih besar dari End
+        if start_idx >= end_idx:
+            st.sidebar.error("Angka 'Dari' harus lebih kecil dari 'Sampai'!")
+            df_sliced = df.iloc[0:0] # Kosongkan list
+        else:
+            df_sliced = df.iloc[start_idx:end_idx]
+            st.success(f"Menampilkan data urutan {val_mulai} - {val_sampai}")
 
         # INPUT PESAN
         st.markdown("---")
@@ -158,6 +170,7 @@ if uploaded_file is not None:
         st.error(f"Terjadi kesalahan: {e}")
 else:
     st.info("Silakan upload file di menu sebelah kiri (Sidebar).")
+
 
 
 
