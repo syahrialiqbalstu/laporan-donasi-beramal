@@ -137,74 +137,109 @@ if uploaded_file is not None:
         # Styling agar tampilan lebih renggang dan rapi
         st.markdown("""
         <style>
-            div[data-testid="column"] { align-self: center; } 
-            hr { margin: 0.5rem 0 1rem 0; }
+        /* Perbesar semua checkbox */
+        input[type="checkbox"] {
+            transform: scale(1.6);
+            margin-right: 0.35rem;
+        }
+        /* Kartu donatur dalam grid 3 kolom */
+        .donor-card {
+            padding: 0.75rem 0.9rem;
+            border-radius: 0.75rem;
+            border: 1px solid #e5e7eb;
+            background-color: #ffffff;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+            margin-bottom: 0.5rem;
+        }
+        .donor-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-bottom: 0.2rem;
+        }
+        .donor-name.done {
+            color: #9ca3af;
+            text-decoration: line-through;
+        }
+        .donor-meta {
+            font-size: 0.8rem;
+            color: #6b7280;
+        }
         </style>
         """, unsafe_allow_html=True)
 
-        for index, row in df_sliced.iterrows():
-            nama = str(row[c_nama])
-            nomor_raw = row[c_nomor]
-            nominal_raw = row[c_nominal]
-            
-            if pd.isna(nomor_raw) or str(nomor_raw).strip() == "": continue
-            
-            nomor_bersih = bersihkan_nomor(nomor_raw)
-            nominal_rp = format_rupiah(nominal_raw)
-            
-            # RAKIT PESAN
-            body_pesan = template_pesan.replace("[nama]", nama).replace("[nominal]", nominal_rp)
-            
-            if pakai_salam:
-                salam = get_random_salam()
-                pesan_final = f"{salam} {nama},\n\n{body_pesan}"
-            else:
-                pesan_final = body_pesan
 
-            link_wa = f"https://wa.me/{nomor_bersih}?text={urllib.parse.quote(pesan_final)}"
-            
-            # --- TAMPILAN UI BARU ---
-            
-            # Buat container agar setiap baris ada kotaknya sedikit
-            with st.container():
-                # Bagi layout menjadi 4 kolom:
-                # Kolom 1 (Kecil): Nomor Urut
-                # Kolom 2 (Kecil): Checkbox
-                # Kolom 3 (Besar): Nama & Info
-                # Kolom 4 (Sedang): Tombol Kirim
-                c_num, c_check, c_info, c_btn = st.columns([0.3, 0.3, 4, 1.2])
-                
-                # 1. Penomoran (Index Excel + 1)
-                with c_num:
-                    st.write(f"**#{index+1}**")
-                
-                # 2. Checkbox Status
-                with c_check:
-                    # Key unik berdasarkan index agar status tersimpan
-                    is_done = st.checkbox("", key=f"status_{index}")
-                
-                # 3. Info Donatur (Logika Coret Teks)
-                with c_info:
-                    if is_done:
-                        # Jika dicentang: Teks abu-abu & dicoret
-                        st.markdown(f"<h3 style='color: #b2bec3; margin:0; text-decoration: line-through;'>{nama}</h3>", unsafe_allow_html=True)
-                        st.caption(f"~~{nominal_rp}~~ | ~~{nomor_bersih}~~ (Terkirim ✅)")
-                    else:
-                        # Jika belum: Teks hitam tebal
-                        st.markdown(f"<h3 style='margin:0;'>{nama}</h3>", unsafe_allow_html=True)
-                        st.caption(f"💰 **{nominal_rp}** | 📱 {nomor_bersih}")
+                # Tampilkan data dalam grid 3 kolom (hanya di desktop akan terasa, di HP tetap vertikal)
+        total_slice = len(df_sliced)
 
-                # 4. Tombol Kirim
-                with c_btn:
-                    # Jika sudah selesai, tombol jadi disabled (abu-abu) agar tidak salah kirim
-                    st.link_button("Kirim WA 🚀", link_wa, type="primary", disabled=is_done)
-                
-                st.divider()
+        for block_start in range(0, total_slice, 3):
+            cols = st.columns(3, gap="large")  # 3 kartu per baris
+
+            for col_idx in range(3):
+                data_idx = block_start + col_idx
+                if data_idx >= total_slice:
+                    break
+
+                row = df_sliced.iloc[data_idx]
+
+                nama = str(row[c_nama])
+                nomor_raw = row[c_nomor]
+                nominal_raw = row[c_nominal]
+
+                if pd.isna(nomor_raw) or str(nomor_raw).strip() == "":
+                    continue
+
+                nomor_bersih = bersihkan_nomor(nomor_raw)
+                nominal_rp = format_rupiah(nominal_raw)
+
+                # Rakit pesan
+                body_pesan = template_pesan.replace("[nama]", nama).replace("[nominal]", nominal_rp)
+                if pakai_salam:
+                    salam = get_random_salam()
+                    pesan_final = f"{salam} {nama},\n\n{body_pesan}"
+                else:
+                    pesan_final = body_pesan
+
+                link_wa = f"https://wa.me/{nomor_bersih}?text={urllib.parse.quote(pesan_final)}"
+
+                # Nomor urut global (ikut pagination)
+                global_idx = start_idx + data_idx  # start_idx sudah dibuat di bagian pagination
+
+                with cols[col_idx]:
+                    # Checkbox besar + nomor urut
+                    is_done = st.checkbox(
+                        f"#{global_idx + 1}",
+                        key=f"status_{global_idx}"
+                    )
+
+                    name_class = "donor-name done" if is_done else "donor-name"
+
+                    # Kartu donatur
+                    st.markdown(
+                        f"""
+                        <div class="donor-card">
+                            <div class="{name_class}">{nama}</div>
+                            <div class="donor-meta">
+                                💰 {nominal_rp}<br>
+                                📱 {nomor_bersih}
+                            </div>
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+
+                    # Tombol kirim – akan disable jika sudah dicentang
+                    st.link_button(
+                        "Kirim WA 🚀",
+                        link_wa,
+                        type="primary",
+                        disabled=is_done
+                    )
 
     except Exception as e:
         st.error(f"Terjadi kesalahan: {e}")
 else:
     st.info("Silakan upload file di menu sebelah kiri (Sidebar).")
+
 
 
 
