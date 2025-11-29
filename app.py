@@ -52,7 +52,7 @@ if uploaded_file is not None:
         # FITUR BARU: PAGINATION (INPUT ANGKA)
         st.sidebar.markdown("---")
         st.sidebar.header("2. Pembagian Tugas")
-       total_data = len(df)
+        total_data = len(df)
         
         # --- 1. INISIALISASI MEMORI (Agar Slider & Angka Sinkron) ---
         if 'start_idx' not in st.session_state:
@@ -204,6 +204,7 @@ if uploaded_file is not None:
         st.error(f"Terjadi kesalahan: {e}")
 else:
     st.info("Silakan upload file di menu sebelah kiri (Sidebar).")
+
 
 
 
