@@ -114,7 +114,6 @@ if uploaded_file is not None:
         st.markdown("---")
 
         # INPUT PESAN
-        st.markdown("---")
         st.subheader("3. Tulis Pesan")
         
         col_msg1, col_msg2 = st.columns([2, 1])
@@ -129,7 +128,7 @@ if uploaded_file is not None:
 
         st.markdown("---")
         
-                # Styling aksi kirim
+        # Styling aksi kirim
         st.markdown("""
         <style>
         /* Perbesar checkbox */
@@ -166,8 +165,8 @@ if uploaded_file is not None:
         """, unsafe_allow_html=True)
 
 
-                # Tampilkan data dalam grid 3 kolom (hanya di desktop akan terasa, di HP tetap vertikal)
-                total_slice = len(df_sliced)
+        # Tampilkan data dalam grid 3 kolom (hanya di desktop akan terasa, di HP tetap vertikal)
+        total_slice = len(df_sliced)
 
         # Tampilkan 3 item per baris (desktop), otomatis jadi 1 kolom di HP
         for block_start in range(0, total_slice, 3):
@@ -238,24 +237,10 @@ if uploaded_file is not None:
                                 "Kirim WA 🚀",
                                 link_wa,
                                 type="primary",
-                                disabled=is_done   # non-aktif jika sudah dicentang
+                                disabled=is_done    # non-aktif jika sudah dicentang
                             )
                             
     except Exception as e:
         st.error(f"Terjadi kesalahan: {e}")
 else:
     st.info("Silakan upload file di menu sebelah kiri (Sidebar).")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
