@@ -52,65 +52,67 @@ if uploaded_file is not None:
         # FITUR BARU: PAGINATION (INPUT ANGKA)
         st.sidebar.markdown("---")
         st.sidebar.header("2. Pembagian Tugas")
+        
         total_data = len(df)
         
-        # --- 1. INISIALISASI MEMORI (Agar Slider & Angka Sinkron) ---
-        if 'start_idx' not in st.session_state:
-            st.session_state['start_idx'] = 0
-        if 'end_idx' not in st.session_state:
-            st.session_state['end_idx'] = min(50, total_data)
+        # --- 1. MEMORI PUSAT (Single Source of Truth) ---
+        # Kita simpan posisi start & end di variabel khusus
+        if 'pos_start' not in st.session_state:
+            st.session_state.pos_start = 0
+        if 'pos_end' not in st.session_state:
+            st.session_state.pos_end = min(50, total_data)
 
-        # --- 2. FUNGSI UPDATE (Callback) ---
+        # --- 2. FUNGSI PENYAMBUNG (Callback) ---
         def update_from_slider():
-            # Saat slider digeser, update angka input
-            st.session_state.start_idx = st.session_state.slider_key[0]
-            st.session_state.end_idx = st.session_state.slider_key[1]
+            # Kalau slider digeser, update memori pusat
+            val = st.session_state.slider_widget
+            st.session_state.pos_start = val[0]
+            st.session_state.pos_end = val[1]
 
         def update_from_input():
-            # Saat angka diketik, update slider
-            # Konversi: Input Manusia (mulai 1) -> Python (mulai 0)
-            st.session_state.start_idx = st.session_state.num_start - 1
-            st.session_state.end_idx = st.session_state.num_end
+            # Kalau angka diketik, update memori pusat
+            # Konversi: Input Manusia (1) -> Python (0)
+            st.session_state.pos_start = st.session_state.num_input_start - 1
+            st.session_state.pos_end = st.session_state.num_input_end
 
-        # --- 3. TAMPILAN INPUT ANGKA ---
-        c_awal, c_akhir = st.sidebar.columns(2)
+        # --- 3. TAMPILAN UI ---
         
+        # A. Input Angka (Membaca & Menulis ke Memori Pusat)
+        c_awal, c_akhir = st.sidebar.columns(2)
         with c_awal:
-            # Input Start (Value diambil dari memori)
             st.number_input(
-                "Dari", 
-                min_value=1, max_value=total_data, 
-                value=st.session_state.start_idx + 1, 
-                key="num_start", on_change=update_from_input
+                "Dari", min_value=1, max_value=total_data,
+                value=st.session_state.pos_start + 1, # +1 karena manusia hitung dari 1
+                key="num_input_start", on_change=update_from_input
             )
-            
         with c_akhir:
-            # Input End
             st.number_input(
-                "Sampai", 
-                min_value=1, max_value=total_data, 
-                value=st.session_state.end_idx, 
-                key="num_end", on_change=update_from_input
+                "Sampai", min_value=1, max_value=total_data,
+                value=st.session_state.pos_end,
+                key="num_input_end", on_change=update_from_input
             )
 
-        # --- 4. TAMPILAN SLIDER ---
-        # Slider mengambil value dari session_state agar posisinya ikut berubah saat diketik
-        slider_range = st.sidebar.slider(
-            "Geser Range Cepat:",
-            0, total_data,
-            (st.session_state.start_idx, st.session_state.end_idx),
-            key="slider_key", on_change=update_from_slider
+        # B. Slider (Membaca & Menulis ke Memori Pusat)
+        st.sidebar.slider(
+            "Geser Range Cepat:", 0, total_data,
+            value=(st.session_state.pos_start, st.session_state.pos_end),
+            key="slider_widget", on_change=update_from_slider
         )
         
-        # Tetapkan variable untuk pemotongan data
-        start_idx = st.session_state.start_idx
-        end_idx = st.session_state.end_idx
+        # --- 4. HASIL AKHIR ---
+        # Variabel inilah yang dipakai untuk memotong Excel
+        start_idx = st.session_state.pos_start
+        end_idx = st.session_state.pos_end
         
-        df_sliced = df.iloc[start_idx:end_idx]
-        
-        # Info teks kecil
-        st.sidebar.caption(f"Menampilkan {end_idx - start_idx} data.")
+        # Validasi agar tidak error
+        if start_idx >= end_idx:
+            df_sliced = df.iloc[0:0] # Kosong
+            st.sidebar.error("Angka 'Dari' harus lebih kecil!")
+        else:
+            df_sliced = df.iloc[start_idx:end_idx]
+            st.sidebar.caption(f"Menampilkan {len(df_sliced)} data ({start_idx+1} - {end_idx}).")
 
+        st.markdown("---")
 
         # INPUT PESAN
         st.markdown("---")
@@ -204,6 +206,7 @@ if uploaded_file is not None:
         st.error(f"Terjadi kesalahan: {e}")
 else:
     st.info("Silakan upload file di menu sebelah kiri (Sidebar).")
+
 
 
 
