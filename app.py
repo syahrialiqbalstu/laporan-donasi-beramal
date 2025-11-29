@@ -26,11 +26,10 @@ def format_rupiah(angka):
 def get_random_salam():
     """Acak salam biar aman dari blokir WA"""
     salam = [
-        "Assalamualaikum Kak", 
-        "Halo Kak", 
-        "Selamat Pagi Kak", 
-        "Siang Kak", 
-        "Hai Kak"
+        "Assalamu'alaikum #PejuangAmal", 
+        "Assalamu'alaikum #SahabatBeramal", 
+        "Assalamualaikum #SahabatBeramal", 
+        "Assalamualaikum #PejuangAmal", 
     ]
     return random.choice(salam)
 
@@ -65,12 +64,7 @@ if uploaded_file is not None:
         # C. CUSTOM PESAN (Bagian Baru!)
         st.subheader("2. Tulis Pesan Laporan")
         
-        default_msg = """Terima kasih banyak atas donasinya sebesar [nominal] untuk Program Jumat Berkah.
-        
-Semoga menjadi amal jariyah dan berkah untuk [nama] sekeluarga. 
-Sehat selalu ya Kak!
-
-- Admin Yayasan"""
+        default_msg = """Tulis isi pesan laporan disini ya kak CS yang sabaar dan tidak suka marah marahh"""
 
         # Input Text Area
         template_pesan = st.text_area("Edit pesan di bawah ini:", value=default_msg, height=180)
