@@ -224,7 +224,7 @@ if uploaded_file is not None:
                             </div>
                         </div>
                         """,
-                        unsafe_allow_html=True
+                        unsafe_allow_html=True,
 
                          # Tombol kirim – akan disable jika sudah dicentang
                     st.link_button(
@@ -241,6 +241,7 @@ if uploaded_file is not None:
         st.error(f"Terjadi kesalahan: {e}")
 else:
     st.info("Silakan upload file di menu sebelah kiri (Sidebar).")
+
 
 
 
