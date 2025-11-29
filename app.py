@@ -6,7 +6,6 @@ import random
 # --- 1. FUNGSI UTAMA ---
 
 def bersihkan_nomor(nomor):
-    """Membersihkan format nomor HP"""
     n = str(nomor)
     if n.endswith('.0'): n = n[:-2]
     n = ''.join(filter(str.isdigit, n))
@@ -17,7 +16,6 @@ def bersihkan_nomor(nomor):
     else: return '62' + n
 
 def format_rupiah(angka):
-    """Mengubah angka jadi format Rp 100.000"""
     try:
         return f"Rp {int(angka):,}".replace(",", ".")
     except:
@@ -26,10 +24,10 @@ def format_rupiah(angka):
 def get_random_salam():
     """Acak salam biar aman dari blokir WA"""
     salam = [
-        "Assalamu'alaikum #PejuangAmal {nama}", 
-        "Assalamu'alaikum #SahabatBeramal {nama}", 
-        "Assalamualaikum #SahabatBeramal {nama}", 
-        "Assalamualaikum #PejuangAmal {nama}", 
+        "Assalamu'alaikum #PejuangAmal", 
+        "Assalamu'alaikum #SahabatBeramal", 
+        "Assalamualaikum #SahabatBeramal", 
+        "Assalamualaikum #PejuangAmal", 
     ]
     return random.choice(salam)
 
@@ -37,14 +35,12 @@ def get_random_salam():
 
 st.set_page_config(page_title="Donasi Reporter", page_icon="📝")
 st.title("📝 Laporan Donasi Custom")
-st.write("Upload data, atur kata-kata, lalu kirim.")
 
 # A. UPLOAD FILE
 uploaded_file = st.file_uploader("1. Upload Excel/CSV Data Donatur", type=['xlsx', 'csv'])
 
 if uploaded_file is not None:
     try:
-        # Baca File
         if uploaded_file.name.endswith('.csv'):
             df = pd.read_csv(uploaded_file)
         else:
@@ -52,7 +48,6 @@ if uploaded_file is not None:
             
         st.success(f"Data dimuat: {len(df)} donatur.")
         
-        # B. PILIH KOLOM (Mapping)
         with st.expander("⚙️ Pengaturan Kolom Excel (Klik jika kolom tidak terbaca)", expanded=False):
             cols = df.columns.tolist()
             c_nama = st.selectbox("Kolom NAMA", cols, index=0)
@@ -61,18 +56,19 @@ if uploaded_file is not None:
         
         st.divider()
 
-        # C. CUSTOM PESAN (Bagian Baru!)
-        st.subheader("2. Tulis Pesan Laporan")
+        # C. CUSTOM PESAN
+        st.subheader("2. Tulis Isi Pesan")
         
+        # Template default saya ubah agar tidak ada salam di awal, karena salam nanti otomatis
         default_msg = """Tulis isi pesan laporan disini ya kak CS yang sabaar dan tidak suka marah marahh"""
 
-        # Input Text Area
-        template_pesan = st.text_area("Edit pesan di bawah ini:", value=default_msg, height=180)
+        template_pesan = st.text_area("Isi Pesan (Tanpa Salam Pembuka):", value=default_msg, height=250)
         
-        st.info("💡 **Tips:** Gunakan kode `[nama]` dan `[nominal]` di dalam teks. Sistem akan menggantinya otomatis sesuai data Excel.")
-
         # Opsi Anti-Banned
-        pakai_salam = st.checkbox("Tambahkan salam acak di awal pesan? (Disarankan AKTIF agar anti-blokir)", value=True)
+        pakai_salam = st.checkbox("✅ Gunakan 'Salam + Nama' otomatis di awal pesan (Recommended)", value=True)
+        
+        if pakai_salam:
+            st.caption("Contoh hasil: *Assalamualaikum Kak Budi, (Isi Pesan Anda...)*")
         
         st.divider()
         
@@ -80,42 +76,27 @@ if uploaded_file is not None:
         st.subheader("3. Antrian Kirim WA")
 
         for index, row in df.iterrows():
-            # Ambil Data
             nama = str(row[c_nama])
             nomor_raw = row[c_nomor]
             nominal_raw = row[c_nominal]
             
-            # Skip nomor kosong
             if pd.isna(nomor_raw) or str(nomor_raw).strip() == "": continue
             
-            # Format Data
             nomor_bersih = bersihkan_nomor(nomor_raw)
             nominal_rp = format_rupiah(nominal_raw)
             
-            # RAKIT PESAN FINAL
-            # 1. Ambil template dari user
-            pesan_final = template_pesan
+            # --- LOGIKA PENYUSUNAN PESAN BARU ---
             
-            # 2. Ganti [nama] dan [nominal]
-            pesan_final = pesan_final.replace("[nama]", nama)
-            pesan_final = pesan_final.replace("[nominal]", nominal_rp)
+            # 1. Siapkan Body Pesan (Ganti [nominal] dan [nama] jika user masih pakai di body)
+            body_pesan = template_pesan.replace("[nama]", nama).replace("[nominal]", nominal_rp)
             
-            # 3. Tambah salam acak di depan (opsional tapi recommended)
+            # 2. Gabungkan Salam + Nama + Body
             if pakai_salam:
                 salam = get_random_salam()
-                # Gabungkan: Salam + Spasi + Nama + Koma + Enter + Isi Pesan User
-                # Tapi karena user mungkin sudah tulis nama di body, kita taruh salam saja
-                # Strategi aman: Salam + Enter + Pesan User
-                pesan_final = f"{salam} {nama},\n\n{pesan_final.replace('[nama]', '')}" 
-                # Trik kecil: kalau user pakai [nama] di template, kita biarkan. 
-                # Kalau pakai salam otomatis, biasanya strukturnya: "Halo Budi, (Isi pesan)"
-                # Jadi kode di atas saya ubah sedikit biar lebih natural:
-                
-                pesan_final = f"{salam},\n\n{template_pesan.replace('[nama]', nama).replace('[nominal]', nominal_rp)}"
-
+                # Format: Salam (spasi) Nama (koma) (enter 2x) Body
+                pesan_final = f"{salam} {nama},\n\n{body_pesan}"
             else:
-                # Kalau tidak pakai salam otomatis, pakai template murni
-                pesan_final = pesan_final.replace("[nama]", nama).replace("[nominal]", nominal_rp)
+                pesan_final = body_pesan
 
             # Buat Link
             link_wa = f"https://wa.me/{nomor_bersih}?text={urllib.parse.quote(pesan_final)}"
@@ -127,7 +108,7 @@ if uploaded_file is not None:
                 with st.expander("🔍 Preview Pesan"):
                     st.text(pesan_final)
             with col2:
-                st.link_button("🚀 Kirim", link_wa, type="primary")
+                st.link_button("🚀 Kirim WA", link_wa, type="primary")
             st.write("---")
 
     except Exception as e:
