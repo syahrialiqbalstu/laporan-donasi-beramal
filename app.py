@@ -67,9 +67,6 @@ if uploaded_file is not None:
         # Opsi Anti-Banned
         pakai_salam = st.checkbox("✅ Gunakan 'Salam + Nama' otomatis di awal pesan (Recommended)", value=True)
         
-        if pakai_salam:
-            st.caption("Contoh hasil: *Assalamualaikum Kak Budi, (Isi Pesan Anda...)*")
-        
         st.divider()
         
         # D. LIST DONATUR
@@ -116,3 +113,4 @@ if uploaded_file is not None:
 
 else:
     st.info("Silakan upload file Excel data donatur.")
+
