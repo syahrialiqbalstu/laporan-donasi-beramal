@@ -191,7 +191,7 @@ if uploaded_file is not None:
 
                 # Rakit pesan
                 body_pesan = template_pesan.replace("[nama]", nama).replace("[nominal]", nominal_rp)
-                                if pakai_salam:
+                if pakai_salam:
                     salam = get_random_salam()
                     pesan_final = f"{salam} {nama},\n\n{body_pesan}"
                 else:
@@ -248,5 +248,6 @@ if uploaded_file is not None:
         st.error(f"Terjadi kesalahan: {e}")
 else:
     st.info("Silakan upload file di menu sebelah kiri (Sidebar).")
+
 
 
