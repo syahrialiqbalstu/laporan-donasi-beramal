@@ -190,14 +190,22 @@ if uploaded_file is not None:
 
                 # Rakit pesan
                 body_pesan = template_pesan.replace("[nama]", nama).replace("[nominal]", nominal_rp)
+                
                 if pakai_salam:
                     salam = get_random_salam()
                     pesan_final = f"{salam} {nama},\n\n{body_pesan}"
                 else:
                     pesan_final = body_pesan
 
-                # Ganti karakter newline dengan %0A, biarkan emoji apa adanya
-                pesan_final_url = pesan_final.replace("\n", "%0A")
+                # Escape karakter yang bisa merusak URL, tapi biarkan emoji apa adanya
+                pesan_final_url = (
+                    pesan_final
+                    .replace("%", "%25")   # kalau ada tanda persen di teks
+                    .replace("#", "%23")   # hashtag di salam
+                    .replace("&", "%26")   # kalau ada tanda "&"
+                    .replace("\n", "%0A")  # baris baru
+                )
+
                 link_wa = f"https://wa.me/{nomor_bersih}?text={pesan_final_url}"
                 
                 global_idx = start_idx + data_idx  # mengikuti pagination
@@ -248,6 +256,7 @@ if uploaded_file is not None:
         st.error(f"Terjadi kesalahan: {e}")
 else:
     st.info("Silakan upload file di menu sebelah kiri (Sidebar).")
+
 
 
 
