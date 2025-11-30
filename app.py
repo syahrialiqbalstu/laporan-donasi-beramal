@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import random
+from urllib.parse import quote
 
 # --- 1. FUNGSI ---
 def bersihkan_nomor(nomor):
@@ -54,7 +55,6 @@ if uploaded_file is not None:
         total_data = len(df)
         
         # --- 1. MEMORI PUSAT (Single Source of Truth) ---
-        # Kita simpan posisi start & end di variabel khusus
         if 'pos_start' not in st.session_state:
             st.session_state.pos_start = 0
         if 'pos_end' not in st.session_state:
@@ -62,25 +62,22 @@ if uploaded_file is not None:
 
         # --- 2. FUNGSI PENYAMBUNG (Callback) ---
         def update_from_slider():
-            # Kalau slider digeser, update memori pusat
             val = st.session_state.slider_widget
             st.session_state.pos_start = val[0]
             st.session_state.pos_end = val[1]
 
         def update_from_input():
-            # Kalau angka diketik, update memori pusat
-            # Konversi: Input Manusia (1) -> Python (0)
             st.session_state.pos_start = st.session_state.num_input_start - 1
             st.session_state.pos_end = st.session_state.num_input_end
 
         # --- 3. TAMPILAN UI ---
         
-        # A. Input Angka (Membaca & Menulis ke Memori Pusat)
+        # A. Input Angka
         c_awal, c_akhir = st.sidebar.columns(2)
         with c_awal:
             st.number_input(
                 "Dari", min_value=1, max_value=total_data,
-                value=st.session_state.pos_start + 1, # +1 karena manusia hitung dari 1
+                value=st.session_state.pos_start + 1,
                 key="num_input_start", on_change=update_from_input
             )
         with c_akhir:
@@ -90,7 +87,7 @@ if uploaded_file is not None:
                 key="num_input_end", on_change=update_from_input
             )
 
-        # B. Slider (Membaca & Menulis ke Memori Pusat)
+        # B. Slider
         st.sidebar.slider(
             "Geser Range Cepat:", 0, total_data,
             value=(st.session_state.pos_start, st.session_state.pos_end),
@@ -98,13 +95,12 @@ if uploaded_file is not None:
         )
         
         # --- 4. HASIL AKHIR ---
-        # Variabel inilah yang dipakai untuk memotong Excel
         start_idx = st.session_state.pos_start
         end_idx = st.session_state.pos_end
         
-        # Validasi agar tidak error
+        # Validasi
         if start_idx >= end_idx:
-            df_sliced = df.iloc[0:0] # Kosong
+            df_sliced = df.iloc[0:0]
             st.sidebar.error("Angka 'Dari' harus lebih kecil!")
         else:
             df_sliced = df.iloc[start_idx:end_idx]
@@ -127,10 +123,9 @@ if uploaded_file is not None:
 
         st.markdown("---")
         
-        # Styling aksi kirim
+        # Styling
         st.markdown("""
         <style>
-        /* Perbesar checkbox */
         input[type="checkbox"] {
             transform: scale(1.5);
             transform-origin: center;
@@ -163,11 +158,9 @@ if uploaded_file is not None:
         </style>
         """, unsafe_allow_html=True)
 
-
-        # Tampilkan data dalam grid 3 kolom (hanya di desktop akan terasa, di HP tetap vertikal)
+        # Tampilkan data dalam grid 3 kolom
         total_slice = len(df_sliced)
 
-        # Tampilkan 3 item per baris (desktop), otomatis jadi 1 kolom di HP
         for block_start in range(0, total_slice, 3):
             row_cols = st.columns(3, gap="large")
 
@@ -197,27 +190,17 @@ if uploaded_file is not None:
                 else:
                     pesan_final = body_pesan
 
-                # Escape karakter yang bisa merusak URL, tapi biarkan emoji apa adanya
-                pesan_final_url = (
-                    pesan_final
-                    .replace("%", "%25")   # kalau ada tanda persen di teks
-                    .replace("#", "%23")   # hashtag di salam
-                    .replace("&", "%26")   # kalau ada tanda "&"
-                    .replace("\n", "%0A")  # baris baru
-                )
+                # FIX: Gunakan urllib.parse.quote dengan safe='' untuk encode emoji dengan benar
+                pesan_final_url = quote(pesan_final, safe='')
 
                 link_wa = f"https://wa.me/{nomor_bersih}?text={pesan_final_url}"
                 
-                global_idx = start_idx + data_idx  # mengikuti pagination
-
-                # st.write(pesan_final)
+                global_idx = start_idx + data_idx
 
                 with row_cols[col_idx]:
-                    # Satu kartu kecil untuk 1 donatur
                     with st.container():
                         top1, top2, top3 = st.columns([0.9, 3, 1.8])
 
-                        # Kolom 1: checkbox + nomor urut
                         with top1:
                             is_done = st.checkbox(
                                 "",
@@ -228,11 +211,9 @@ if uploaded_file is not None:
                                 unsafe_allow_html=True
                             )
 
-                        # Tentukan kelas CSS berdasarkan status centang
                         name_class = "donor-name-done" if is_done else "donor-name-normal"
                         meta_class = "donor-meta-done" if is_done else "donor-meta-normal"
 
-                        # Kolom 2: nama + meta (nominal & nomor)
                         with top2:
                             st.markdown(
                                 f"<div class='{name_class}'>{nama}</div>",
@@ -243,21 +224,15 @@ if uploaded_file is not None:
                                 unsafe_allow_html=True
                             )
 
-                        # Kolom 3: tombol kirim
                         with top3:
                             st.link_button(
                                 "Kirim WA 🚀",
                                 link_wa,
                                 type="primary",
-                                disabled=is_done    # non-aktif jika sudah dicentang
+                                disabled=is_done
                             )
                             
     except Exception as e:
         st.error(f"Terjadi kesalahan: {e}")
 else:
     st.info("Silakan upload file di menu sebelah kiri (Sidebar).")
-
-
-
-
-
