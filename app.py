@@ -1,9 +1,19 @@
+# -*- coding: utf-8 -*-
 import streamlit as st
 import pandas as pd
 import random
 from urllib.parse import quote
 
 # --- 1. FUNGSI ---
+def encode_wa_message(text):
+    """Encode pesan untuk WhatsApp dengan handling emoji yang benar"""
+    try:
+        # Pastikan text dalam UTF-8, lalu encode untuk URL
+        return quote(text.encode('utf-8'), safe='')
+    except:
+        # Fallback jika ada error
+        return quote(text, safe='')
+
 def bersihkan_nomor(nomor):
     n = str(nomor)
     if n.endswith('.0'): n = n[:-2]
@@ -190,8 +200,8 @@ if uploaded_file is not None:
                 else:
                     pesan_final = body_pesan
 
-                # FIX: Gunakan urllib.parse.quote dengan safe='' untuk encode emoji dengan benar
-                pesan_final_url = quote(pesan_final, safe='')
+                # FIX: Gunakan fungsi khusus untuk encode emoji dengan benar
+                pesan_final_url = encode_wa_message(pesan_final)
 
                 link_wa = f"https://wa.me/{nomor_bersih}?text={pesan_final_url}"
                 
