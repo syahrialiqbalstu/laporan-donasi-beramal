@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-import urllib.parse
 import random
 
 # --- 1. FUNGSI ---
@@ -197,12 +196,13 @@ if uploaded_file is not None:
                 else:
                     pesan_final = body_pesan
 
-                # Encode pesan dengan UTF‑8 agar emoji tidak rusak
-                encoded_msg = urllib.parse.quote(pesan_final, safe='', encoding='utf-8', errors='strict')
-                link_wa = f"https://wa.me/{nomor_bersih}?text={encoded_msg}"
+                # Ganti karakter newline dengan %0A, biarkan emoji apa adanya
+                pesan_final_url = pesan_final.replace("\n", "%0A")
+                link_wa = f"https://wa.me/{nomor_bersih}?text={pesan_final_url}"
+                
                 global_idx = start_idx + data_idx  # mengikuti pagination
 
-                st.write(pesan_final)
+                # st.write(pesan_final)
 
                 with row_cols[col_idx]:
                     # Satu kartu kecil untuk 1 donatur
@@ -248,6 +248,7 @@ if uploaded_file is not None:
         st.error(f"Terjadi kesalahan: {e}")
 else:
     st.info("Silakan upload file di menu sebelah kiri (Sidebar).")
+
 
 
 
