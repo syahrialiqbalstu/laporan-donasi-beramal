@@ -153,10 +153,9 @@ if uploaded_file is not None:
         
         col_msg1, col_msg2 = st.columns([2, 1])
         with col_msg1:
-            # PERBAIKAN: Memastikan string template dideklarasikan dengan 'u' atau encoding eksplisit
-            # agar emoji aman jika lingkungan menjalankan Python 2. Meskipun Python 3, ini aman.
-            # Saya juga menambahkan baris kosong di default_msg untuk mencegah potensi masalah baris.
-            default_msg = """Terima kasih banyak atas donasi Rp[nominal] untuk program X. Semoga Allah membalas kebaikan [nama] dengan pahala yang berlipat ganda. Aamiin yaa Rabbal 'alamiin. 🙏
+            # PERBAIKAN FINAL UNTUK EMOJI: Mengganti emoji raw (🙏) dengan Python Unicode escape sequence (\U0001f64f).
+            # Ini memaksa Python untuk menggunakan representasi UTF-8 yang benar, terlepas dari konfigurasi file/widget.
+            default_msg = """Terima kasih banyak atas donasi Rp[nominal] untuk program X. Semoga Allah membalas kebaikan [nama] dengan pahala yang berlipat ganda. Aamiin yaa Rabbal 'alamiin. \U0001f64f
 
 Link Laporan: [link_laporan_program]"""
             template_pesan = st.text_area(
